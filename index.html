@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rage Dome — Slam it. Not your controller.</title>
+<style>
+  :root{
+    --bg:#0c0d12; --panel:#14161f; --ink:#f4f5fa; --muted:#a3a7b8;
+    --accent:#ff2d55; --line:#242736;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1050px;margin:0 auto;padding:0 22px}
+  .rainbow{background:linear-gradient(90deg,#ff2d55,#ff9500,#ffec3d,#34c759,#00c7ff,#5e5ce6,#af52de);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .red{color:var(--accent)}
+  .white{color:#fff}
+
+  /* nav */
+  nav{display:flex;justify-content:space-between;align-items:center;padding:20px 0}
+  .logo{font-weight:800;font-size:22px;letter-spacing:.5px}
+  .badge{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:5px 11px;border-radius:99px}
+
+  /* hero */
+  .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;padding:40px 0 60px}
+  @media(max-width:800px){.hero{grid-template-columns:1fr;text-align:center}}
+  h1{font-size:52px;line-height:1.05;font-weight:800;margin-bottom:18px}
+  @media(max-width:800px){h1{font-size:38px}}
+  .sub{font-size:19px;color:var(--muted);margin-bottom:28px;max-width:520px}
+  @media(max-width:800px){.sub{margin-inline:auto}}
+  .price{font-size:20px;margin-bottom:20px}
+  .price b{font-size:34px}
+  .strike{color:var(--muted);text-decoration:line-through;font-size:18px;margin-left:8px}
+  .cta{display:inline-block;background:var(--accent);color:#fff;font-weight:700;font-size:18px;
+    border:none;padding:16px 40px;border-radius:12px;cursor:pointer;text-decoration:none;
+    box-shadow:0 8px 24px rgba(255,45,85,.35);transition:transform .1s}
+  .cta:active{transform:scale(.97)}
+  .guarantee{display:block;margin-top:12px;font-size:13px;color:var(--muted)}
+  .counter{margin-top:16px;font-size:15px;color:var(--muted)}
+  .counter b{color:var(--ink);font-size:18px}
+
+  /* dome mockup */
+  .stage{background:radial-gradient(circle at 50% 30%,#1b1e2b,#0c0d12);border:1px solid var(--line);
+    border-radius:20px;padding:36px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .desk{width:100%;height:14px;background:linear-gradient(#2a2e3f,#191c27);border-radius:4px;margin-top:6px}
+
+  /* strip */
+  .strip{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;padding:0 0 50px}
+  .chip{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 20px;font-weight:600;font-size:15px}
+  .chip span{font-size:20px;margin-right:8px}
+
+  /* compare */
+  .compare{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:34px;margin-bottom:60px}
+  .compare h2{font-size:26px;margin-bottom:22px;text-align:center}
+  table{width:100%;border-collapse:collapse;font-size:16px}
+  td,th{padding:14px 10px;border-bottom:1px solid var(--line);text-align:left}
+  th{color:var(--muted);font-weight:600}
+  .yes{color:#34c759;font-weight:700}
+  .no{color:#ff453a;font-weight:700}
+
+  /* final */
+  .final{text-align:center;padding:20px 0 70px}
+  .final h2{font-size:32px;margin-bottom:22px}
+
+  /* 3d viewer */
+  .view3d{text-align:center;margin-bottom:60px}
+  .view3d h2{font-size:28px;margin-bottom:6px}
+  .viewhint{color:var(--muted);font-size:14px;margin-bottom:18px}
+  #canvas3d{width:100%;max-width:560px;height:380px;margin:0 auto;
+    background:radial-gradient(circle at 50% 35%,#1b1e2b,#0c0d12);
+    border:1px solid var(--line);border-radius:18px;cursor:grab;touch-action:none}
+  #canvas3d:active{cursor:grabbing}
+  .swrow{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+  .swlabel{font-size:13px;color:var(--muted);width:44px;text-align:right;font-weight:600}
+  .swatches{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .sw{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);cursor:pointer;transition:transform .1s}
+  .sw:hover{transform:scale(1.15)}
+  .sw.active{border-color:#fff;transform:scale(1.15)}
+
+  /* problem */
+  .problem{background:linear-gradient(180deg,#191111,#14161f);border:1px solid var(--line);border-radius:18px;padding:38px;margin-bottom:60px;text-align:center}
+  .problem h2{font-size:28px;margin-bottom:14px}
+  .problem p{color:var(--muted);font-size:17px;max-width:620px;margin:0 auto 22px}
+  .bignum{font-size:44px;font-weight:800;color:var(--accent)}
+
+  /* feature grid */
+  .why{margin-bottom:60px}
+  .why h2{font-size:28px;text-align:center;margin-bottom:28px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:800px){.grid{grid-template-columns:1fr}}
+  .feat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px}
+  .feat .ic{font-size:28px;margin-bottom:10px}
+  .feat h3{font-size:19px;margin-bottom:8px}
+  .feat p{color:var(--muted);font-size:15px}
+
+  /* steps */
+  .steps{margin-bottom:60px}
+  .steps h2{font-size:28px;text-align:center;margin-bottom:28px}
+  .stepgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:800px){.stepgrid{grid-template-columns:1fr}}
+  .step{text-align:center;padding:22px}
+  .stepnum{width:44px;height:44px;line-height:44px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:20px;margin:0 auto 14px}
+  .step h3{font-size:18px;margin-bottom:6px}
+  .step p{color:var(--muted);font-size:15px}
+
+  /* faq */
+  .faq{margin-bottom:60px}
+  .faq h2{font-size:28px;text-align:center;margin-bottom:24px}
+  .q{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin-bottom:12px}
+  .q h3{font-size:17px;margin-bottom:6px}
+  .q p{color:var(--muted);font-size:15px}
+
+  footer{border-top:1px solid var(--line);padding:26px 0;text-align:center;color:var(--muted);font-size:13px}
+
+  /* modal */
+  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px;z-index:10}
+  .modal.on{display:flex}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:32px;max-width:400px;width:100%;text-align:center}
+  .card h3{font-size:24px;margin-bottom:10px}
+  .card p{color:var(--muted);margin-bottom:20px}
+  .card input{width:100%;padding:13px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:16px;margin-bottom:14px}
+  .card .cta{width:100%}
+  .close{margin-top:14px;color:var(--muted);cursor:pointer;font-size:14px;background:none;border:none}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav>
+    <div class="logo"><span class="red">RAGE</span> <span class="white">DOME</span></div>
+    <div class="badge">🔥 Launching soon</div>
+  </nav>
+
+  <section class="hero">
+    <div>
+      <h1>Slam the dome.<br>Not your <span class="white">controller.</span></h1>
+      <p class="sub">One bad game and there goes a $70 controller. Rage Dome is a squishy half-dome that grips your desk so you can slam it as hard as you want — and it never pops off.</p>
+      <div class="price"><b>$17.99</b><span class="strike">$34.99</span></div>
+      <a href="#" class="cta" onclick="openModal();return false;">Reserve mine →</a>
+      <span class="guarantee">No payment now · Just claiming your spot in the first batch</span>
+      <div class="counter"><b id="count">0</b> gamers reserved · <span class="red">unlimited spots open</span></div>
+    </div>
+    <div class="stage">
+      <!-- SVG dome mockup -->
+      <svg viewBox="0 0 260 170" width="100%" style="max-width:340px">
+        <defs>
+          <linearGradient id="dome" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ff5c7a"/>
+            <stop offset="1" stop-color="#c81e3e"/>
+          </linearGradient>
+          <radialGradient id="shine" cx="0.35" cy="0.25" r="0.5">
+            <stop offset="0" stop-color="#fff" stop-opacity=".55"/>
+            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <ellipse cx="130" cy="150" rx="105" ry="14" fill="#000" opacity=".35"/>
+        <path d="M25 150 A105 105 0 0 1 235 150 Z" fill="url(#dome)"/>
+        <path d="M25 150 A105 105 0 0 1 235 150 Z" fill="url(#shine)"/>
+        <rect x="20" y="149" width="220" height="8" rx="4" fill="#1a1d29"/>
+      </svg>
+      <div class="desk"></div>
+    </div>
+  </section>
+
+  <section class="strip">
+    <div class="chip"><span>💥</span>Slam-down design</div>
+    <div class="chip"><span>🔒</span>Grippy base — no suction</div>
+    <div class="chip"><span>🎮</span>Saves your gear</div>
+    <div class="chip"><span>🌈</span>Every color coming</div>
+  </section>
+
+  <section class="view3d">
+    <h2>Spin it — see every angle</h2>
+    <p class="viewhint">Click and drag to rotate · pick a color</p>
+    <div id="canvas3d"></div>
+    <div class="swrow">
+      <span class="swlabel">Dome</span>
+      <div class="swatches">
+        <button class="sw" style="background:#e0263f" onclick="setColor('#e0263f',this)"></button>
+        <button class="sw" style="background:#ff9500" onclick="setColor('#ff9500',this)"></button>
+        <button class="sw" style="background:#ffd60a" onclick="setColor('#ffd60a',this)"></button>
+        <button class="sw" style="background:#34c759" onclick="setColor('#34c759',this)"></button>
+        <button class="sw" style="background:#00c7ff" onclick="setColor('#00c7ff',this)"></button>
+        <button class="sw" style="background:#5e5ce6" onclick="setColor('#5e5ce6',this)"></button>
+        <button class="sw" style="background:#af52de" onclick="setColor('#af52de',this)"></button>
+        <button class="sw" style="background:#1a1d29" onclick="setColor('#1a1d29',this)"></button>
+      </div>
+    </div>
+    <div class="swrow">
+      <span class="swlabel">Base</span>
+      <div class="swatches">
+        <button class="sw" style="background:#1a1d29" onclick="setBaseColor('#1a1d29',this)"></button>
+        <button class="sw" style="background:#e0263f" onclick="setBaseColor('#e0263f',this)"></button>
+        <button class="sw" style="background:#ff9500" onclick="setBaseColor('#ff9500',this)"></button>
+        <button class="sw" style="background:#ffd60a" onclick="setBaseColor('#ffd60a',this)"></button>
+        <button class="sw" style="background:#34c759" onclick="setBaseColor('#34c759',this)"></button>
+        <button class="sw" style="background:#00c7ff" onclick="setBaseColor('#00c7ff',this)"></button>
+        <button class="sw" style="background:#5e5ce6" onclick="setBaseColor('#5e5ce6',this)"></button>
+        <button class="sw" style="background:#f4f5fa" onclick="setBaseColor('#f4f5fa',this)"></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="problem">
+    <h2>Rage costs you money.</h2>
+    <p>One tilted moment and a controller hits the wall. A new Xbox or PS5 controller runs <b>$65–75</b>. Do that twice a year and you've thrown away more than a game console. Rage Dome gives your hands somewhere to put that anger — for less than the price of one lost match.</p>
+    <div class="bignum">$70 → $17.99</div>
+  </section>
+
+  <section class="why">
+    <h2>Why Rage Dome beats the rest</h2>
+    <div class="grid">
+      <div class="feat">
+        <div class="ic">💥</div>
+        <h3>You slam down, not sideways</h3>
+        <p>Every other punch toy is a ball on a stalk you hit sideways — which is exactly why they rip off the desk. When you slam Rage Dome straight down, the force presses it <b>into</b> your desk. Hit it harder and it grips harder.</p>
+      </div>
+      <div class="feat">
+        <div class="ic">🔒</div>
+        <h3>Wide square grip pad, not a suction cup</h3>
+        <p>Suction cups only stick to clean glass and fall off on a real desk — the #1 complaint on every competitor. Rage Dome sits in the center of a thin square pad, so there's way more sticky surface holding it down. Miss the dome? Your hand hits the flat pad, not your desk.</p>
+      </div>
+      <div class="feat">
+        <div class="ic">🎯</div>
+        <h3>Low, sleek, not ugly</h3>
+        <p>It's a clean half-dome that sits flat by your mouse — not a giant ball on a spring taking up half your setup. Looks good on camera, doesn't get in the way.</p>
+      </div>
+      <div class="feat">
+        <div class="ic">💸</div>
+        <h3>Half the price</h3>
+        <p>The "gamer" ones charge $35+ for a dropshipped suction ball. Rage Dome is <b>$17.99</b> — a better design for half the money.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="steps">
+    <h2>How it works</h2>
+    <div class="stepgrid">
+      <div class="step"><div class="stepnum">1</div><h3>Stick it</h3><p>Press the grip base onto your desk next to your mouse. Done in two seconds.</p></div>
+      <div class="step"><div class="stepnum">2</div><h3>Slam it</h3><p>Bad game? Slam the dome as hard as you want. It takes the hit and springs back.</p></div>
+      <div class="step"><div class="stepnum">3</div><h3>Reset</h3><p>Get the anger out, keep your gear intact, and get back in the game focused.</p></div>
+    </div>
+  </section>
+
+  <section class="compare">
+    <h2>Rage Dome vs. the suction-cup stuff</h2>
+    <table>
+      <tr><th>What matters</th><th>Rage Dome</th><th>Suction punch balls</th></tr>
+      <tr><td>Stays put when you hit it hard</td><td class="yes">✔ Slam presses it down</td><td class="no">✘ Pops off after a few hits</td></tr>
+      <tr><td>Works on a normal / textured desk</td><td class="yes">✔ Grippy base</td><td class="no">✘ Needs smooth glass</td></tr>
+      <tr><td>Low, sleek, not ugly</td><td class="yes">✔ Half-dome</td><td class="no">✘ Big ball on a stalk</td></tr>
+      <tr><td>Price</td><td class="yes">$17.99</td><td class="no">$35+</td></tr>
+    </table>
+  </section>
+
+  <section class="faq">
+    <h2>Questions</h2>
+    <div class="q"><h3>Will it really stay stuck when I hit it hard?</h3><p>Yes — that's the whole point. Slamming down pushes it into the desk instead of peeling it off like a sideways-punch ball does.</p></div>
+    <div class="q"><h3>Will it damage or mark my desk?</h3><p>No. The grip base is designed to hold firmly and peel off clean when you want to move it.</p></div>
+    <div class="q"><h3>Is it loud?</h3><p>No. It's a soft dome — quiet enough for late-night sessions and streaming.</p></div>
+    <div class="q"><h3>What colors can I get?</h3><p>Launching in a few colors first, with the full rainbow lineup coming after. Reserve now and you'll get first pick.</p></div>
+    <div class="q"><h3>Am I paying now?</h3><p>No. Reserving just holds you a spot in the first batch — no charge until it's ready to ship.</p></div>
+  </section>
+
+  <section class="final">
+    <h2>Get one from the first batch.</h2>
+    <a href="#" class="cta" onclick="openModal();return false;">Reserve mine →</a>
+  </section>
+
+</div>
+
+<footer>Rage Dome · A first-batch reservation, not a charge · © 2026</footer>
+
+<!-- reservation modal -->
+<div class="modal" id="modal">
+  <div class="card">
+    <form name="reservations" method="POST" data-netlify="true" netlify-honeypot="bot-field" onsubmit="return submitRes(event)">
+      <input type="hidden" name="form-name" value="reservations">
+      <p class="hidden"><label>Leave blank: <input name="bot-field"></label></p>
+      <h3>Reserve your Rage Dome 🔥</h3>
+      <p>Drop your email and we'll hold one from the first batch for you.</p>
+      <input type="email" name="email" id="email" placeholder="you@email.com" required>
+      <button type="submit" class="cta">Hold my spot</button>
+    </form>
+    <button class="close" onclick="closeModal()">Maybe later</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+  // ---- 3D Rage Dome viewer ----
+  function roundedRectShape(w,h,r){
+    var s=new THREE.Shape();
+    var x=-w/2, y=-h/2;
+    s.moveTo(x+r,y);
+    s.lineTo(x+w-r,y); s.quadraticCurveTo(x+w,y,x+w,y+r);
+    s.lineTo(x+w,y+h-r); s.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    s.lineTo(x+r,y+h); s.quadraticCurveTo(x,y+h,x,y+h-r);
+    s.lineTo(x,y+r); s.quadraticCurveTo(x,y,x+r,y);
+    return s;
+  }
+  var domeMat, baseMat, group, renderer, scene, camera, dragging=false, px=0, py=0, autoRot=true;
+  function init3d(){
+    var el=document.getElementById('canvas3d');
+    if(!window.THREE){el.innerHTML='<p style="color:#a3a7b8;padding:40px">3D preview needs an internet connection.</p>';return;}
+    var w=el.clientWidth, h=el.clientHeight;
+    scene=new THREE.Scene();
+    camera=new THREE.PerspectiveCamera(40,w/h,0.1,100);
+    camera.position.set(0,1.4,4.2);
+    camera.lookAt(0,0.35,0);
+    renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+    renderer.setSize(w,h);renderer.setPixelRatio(window.devicePixelRatio);
+    el.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0xffffff,0.55));
+    var d=new THREE.DirectionalLight(0xffffff,0.9);d.position.set(3,5,4);scene.add(d);
+    var p=new THREE.PointLight(0xffffff,0.5);p.position.set(-3,2,3);scene.add(p);
+
+    group=new THREE.Group();
+    // smooth, low, wide lump
+    var domeGeo=new THREE.SphereGeometry(1,96,72,0,Math.PI*2,0,Math.PI/2);
+    domeMat=new THREE.MeshStandardMaterial({color:0xe0263f,roughness:0.4,metalness:0.03});
+    var dome=new THREE.Mesh(domeGeo,domeMat);
+    dome.scale.set(1.3,0.55,1.3); // low, wide, spread-out
+    group.add(dome);
+    // thin square grip pad with rounded corners (dome sits in the center)
+    var baseGeo=new THREE.ExtrudeGeometry(roundedRectShape(2.7,2.7,0.5),
+      {depth:0.07,bevelEnabled:true,bevelThickness:0.02,bevelSize:0.02,bevelSegments:3});
+    baseGeo.rotateX(-Math.PI/2);
+    baseGeo.center();
+    baseMat=new THREE.MeshStandardMaterial({color:0x1a1d29,roughness:0.85});
+    var base=new THREE.Mesh(baseGeo,baseMat);
+    base.position.y=-0.055;
+    group.add(base);
+    group.position.y=0.0;
+    scene.add(group);
+
+    // drag to rotate
+    el.addEventListener('pointerdown',function(e){dragging=true;autoRot=false;px=e.clientX;py=e.clientY;});
+    window.addEventListener('pointerup',function(){dragging=false;});
+    window.addEventListener('pointermove',function(e){
+      if(!dragging)return;
+      group.rotation.y+=(e.clientX-px)*0.01;
+      group.rotation.x+=(e.clientY-py)*0.01;
+      group.rotation.x=Math.max(-0.6,Math.min(0.9,group.rotation.x));
+      px=e.clientX;py=e.clientY;
+    });
+    window.addEventListener('resize',function(){
+      var nw=el.clientWidth,nh=el.clientHeight;
+      camera.aspect=nw/nh;camera.updateProjectionMatrix();renderer.setSize(nw,nh);
+    });
+    animate();
+  }
+  function animate(){
+    requestAnimationFrame(animate);
+    if(autoRot&&group)group.rotation.y+=0.006;
+    if(renderer)renderer.render(scene,camera);
+  }
+  function setColor(hex,btn){
+    if(domeMat)domeMat.color.set(hex);
+    var row=btn.closest('.swrow');
+    row.querySelectorAll('.sw').forEach(function(s){s.classList.remove('active')});
+    if(btn)btn.classList.add('active');
+  }
+  function setBaseColor(hex,btn){
+    if(baseMat)baseMat.color.set(hex);
+    var row=btn.closest('.swrow');
+    row.querySelectorAll('.sw').forEach(function(s){s.classList.remove('active')});
+    if(btn)btn.classList.add('active');
+  }
+  window.addEventListener('load',init3d);
+
+  function openModal(){document.getElementById('modal').classList.add('on')}
+  function closeModal(){document.getElementById('modal').classList.remove('on')}
+  var reserved=0;
+  function submitRes(e){
+    e.preventDefault();
+    var form=e.target;
+    var data=new URLSearchParams(new FormData(form)).toString();
+    fetch("/",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:data})
+      .then(showHeld).catch(showHeld); // show success even offline (local preview)
+    return false;
+  }
+  function showHeld(){
+    reserved++;
+    document.getElementById('count').textContent=reserved;
+    document.querySelector('.card').innerHTML='<h3>Spot held ✅</h3><p>Thanks! We\'ll email you the second the first batch is ready.</p><button class="close" onclick="closeModal()">Close</button>';
+  }
+</script>
+</body>
+</html>

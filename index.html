@@ -407,7 +407,7 @@
     scene.add(bezel);
     var screen=new THREE.Mesh(
       new THREE.PlaneGeometry(6.05,3.2),
-      new THREE.MeshBasicMaterial({color:0x16325c})
+      new THREE.MeshStandardMaterial({color:0x090a0e,roughness:0.25,metalness:0.2})
     );
     screen.position.set(0,2.5,-5.1);
     scene.add(screen);

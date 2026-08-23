@@ -92,6 +92,11 @@
   .buildgrid{display:grid;grid-template-columns:1.15fr .85fr;gap:26px;align-items:start;text-align:left}
   @media(max-width:860px){.buildgrid{grid-template-columns:1fr}}
   .respanel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px}
+  .respanel.flash{animation:flashPanel 1.4s ease-out}
+  @keyframes flashPanel{
+    0%{border-color:var(--accent);box-shadow:0 0 0 4px rgba(255,45,85,.35)}
+    100%{border-color:var(--line);box-shadow:none}
+  }
   .respanel h3{font-size:16px;margin-bottom:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
   .picked{margin-top:16px;font-size:14px;color:var(--muted)}
   .pdot{display:inline-block;width:13px;height:13px;border-radius:50%;border:1px solid var(--line);vertical-align:-2px;margin-right:5px}
@@ -544,7 +549,17 @@
 
   function goBuild(){
     var el=document.getElementById('builder');
-    if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+    if(!el) return;
+    try{ el.scrollIntoView({behavior:'smooth',block:'start'}); }
+    catch(e){ el.scrollIntoView(); }          // fallback for older browsers
+    var p=document.querySelector('.respanel');
+    if(p){
+      p.classList.remove('flash');
+      void p.offsetWidth;                     // restart the animation
+      p.classList.add('flash');
+    }
+    var em=document.getElementById('email');
+    if(em) setTimeout(function(){ try{em.focus({preventScroll:true});}catch(e){} },600);
   }
 
   // ---- reservations (saved server-side) ----

@@ -297,6 +297,51 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
   // ---- 3D Rage Dome viewer ----
+  // soft noise texture -> used for micro surface detail (bump only, never colour)
+  function makeNoiseTexture(size,strength){
+    var c=document.createElement('canvas'); c.width=c.height=size;
+    var ctx=c.getContext('2d');
+    var img=ctx.createImageData(size,size);
+    for(var i=0;i<size*size;i++){
+      var v=128+(Math.random()-0.5)*255*strength;
+      img.data[i*4]=img.data[i*4+1]=img.data[i*4+2]=v;
+      img.data[i*4+3]=255;
+    }
+    ctx.putImageData(img,0,0);
+    var t=new THREE.CanvasTexture(c);
+    t.wrapS=t.wrapT=THREE.RepeatWrapping;
+    t.repeat.set(5,5);
+    return t;
+  }
+
+  // soft round shadow blob so the product feels planted on the surface
+  function makeContactShadow(){
+    var c=document.createElement('canvas'); c.width=c.height=256;
+    var ctx=c.getContext('2d');
+    var g=ctx.createRadialGradient(128,128,10,128,128,126);
+    g.addColorStop(0,'rgba(0,0,0,0.55)');
+    g.addColorStop(0.55,'rgba(0,0,0,0.22)');
+    g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g; ctx.fillRect(0,0,256,256);
+    return new THREE.CanvasTexture(c);
+  }
+
+  // molded-rubber dome profile (superellipse + a real fillet at the base)
+  function domeProfile(R,H,steps){
+    var pts=[], i, t, x, y;
+    for(i=0;i<=steps;i++){
+      t=i/steps;
+      x=R*t;
+      y=H*Math.pow(Math.max(0,1-Math.pow(t,2.6)),0.62);
+      pts.push(new THREE.Vector2(x,y));
+    }
+    // fillet: flare slightly outward as it meets the pad
+    pts.push(new THREE.Vector2(R+0.035,0.035));
+    pts.push(new THREE.Vector2(R+0.055,0.012));
+    pts.push(new THREE.Vector2(R+0.06,0));
+    return pts;
+  }
+
   function roundedRectShape(w,h,r){
     var s=new THREE.Shape();
     var x=-w/2, y=-h/2;
@@ -426,20 +471,40 @@
     // ================= THE PRODUCT
     group=new THREE.Group();
 
-    var domeGeo=new THREE.SphereGeometry(1,96,72,0,Math.PI*2,0,Math.PI/2);
-    domeMat=new THREE.MeshStandardMaterial({color:0xe0263f,roughness:0.42,metalness:0.0});
+    var rubberBump=makeNoiseTexture(256,0.10);
+
+    var domeGeo=new THREE.LatheGeometry(domeProfile(1.34,0.74,90),128);
+    domeGeo.computeVertexNormals();
+    domeMat=new THREE.MeshPhysicalMaterial({
+      color:0xe0263f,
+      roughness:0.62,          // matte silicone, not plastic
+      metalness:0.0,
+      clearcoat:0.22,          // faint soft-touch sheen
+      clearcoatRoughness:0.75,
+      bumpMap:rubberBump,
+      bumpScale:0.006          // micro texture only
+    });
     var dome=new THREE.Mesh(domeGeo,domeMat);
-    dome.scale.set(1.3,0.55,1.3);
     dome.castShadow=true;
     dome.receiveShadow=true;
+    dome.userData={bx:1,by:1};
     group.add(dome);
     domeMesh=dome;
+
+    // contact shadow under the dome
+    var cShadow=new THREE.Mesh(
+      new THREE.PlaneGeometry(3.6,3.6),
+      new THREE.MeshBasicMaterial({map:makeContactShadow(),transparent:true,depthWrite:false})
+    );
+    cShadow.rotation.x=-Math.PI/2;
+    cShadow.position.y=0.004;
+    group.add(cShadow);
 
     var baseGeo=new THREE.ExtrudeGeometry(roundedRectShape(2.7,2.7,0.5),
       {depth:0.07,bevelEnabled:true,bevelThickness:0.02,bevelSize:0.02,bevelSegments:3});
     baseGeo.rotateX(-Math.PI/2);
     baseGeo.center();
-    baseMat=new THREE.MeshStandardMaterial({color:0x1a1d29,roughness:0.85,metalness:0.06});
+    baseMat=new THREE.MeshStandardMaterial({color:0x1a1d29,roughness:0.9,metalness:0.04,bumpMap:makeNoiseTexture(256,0.16),bumpScale:0.004});
     var base=new THREE.Mesh(baseGeo,baseMat);
     base.position.y=-0.055;
     base.castShadow=true;
@@ -490,7 +555,9 @@
       var sq=1-A*Math.exp(-decay*squashT)*Math.cos(omega*squashT);
       if(squashT>1.4){squashing=false;sq=1;}
       var spread=1+(1-sq)*0.5;             // squishes down, bulges out
-      domeMesh.scale.set(1.3*spread,0.55*sq,1.3*spread);
+      var bx=(domeMesh.userData&&domeMesh.userData.bx)||1;
+      var by=(domeMesh.userData&&domeMesh.userData.by)||1;
+      domeMesh.scale.set(bx*spread,by*sq,bx*spread);
     }
 
     if(renderer)renderer.render(scene,camera);

@@ -41,6 +41,19 @@
     box-shadow:0 8px 24px rgba(255,45,85,.35);transition:transform .1s}
   .cta:active{transform:scale(.97)}
   .guarantee{display:block;margin-top:12px;font-size:13px;color:var(--muted)}
+  .buy{display:inline-block;background:#ffffff;color:#0c0d12;font-weight:800;font-size:21px;
+    border:none;padding:20px 46px;border-radius:14px;cursor:pointer;text-decoration:none;
+    box-shadow:0 10px 30px rgba(255,255,255,.18);transition:transform .1s,box-shadow .15s;
+    min-height:60px;line-height:1.1}
+  .buy:hover{box-shadow:0 12px 36px rgba(255,255,255,.28)}
+  .buy:active{transform:scale(.97)}
+  .buyrow{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+  @media(max-width:800px){
+    .buyrow{justify-content:center}
+    .buy{width:100%;text-align:center;padding:22px 20px;font-size:20px}
+    .cta{width:100%;text-align:center}
+  }
+  .buynote{display:block;margin-top:10px;font-size:13px;color:var(--muted)}
   .counter{margin-top:16px;font-size:15px;color:var(--muted)}
   .counter b{color:var(--ink);font-size:18px}
 
@@ -145,8 +158,12 @@
       <h1>Slam the dome.<br>Not your <span class="white">controller.</span></h1>
       <p class="sub">One bad game and there goes a $70 controller. Rage Dome is a squishy half-dome that grips your desk so you can slam it as hard as you want — and it never pops off.</p>
       <div class="price"><b>$20</b><span class="strike">$34.99</span></div>
-      <a href="#builder" class="cta" onclick="goBuild();return false;">Pick colors & reserve →</a>
-      <span class="guarantee">No payment now · Just claiming your spot in the first batch</span>
+      <div class="buyrow">
+        <a class="buy" href="https://www.foundersweekends.com/api/pay?venture=5ae437b9-f915-48ba-92e7-26029dacdac1&amp;amount=2000&amp;name=Rage+Dome" target="_blank" rel="noopener noreferrer">Buy now — $20</a>
+        <a href="#builder" class="cta" onclick="goBuild();return false;">Pick colors & reserve →</a>
+      </div>
+      <span class="buynote">Pre-order · secure checkout · ships with the first batch</span>
+      <span class="guarantee">Reserving instead? That&rsquo;s free — no payment, just your spot.</span>
       <div class="counter"><b id="count">0</b> gamers reserved · <span class="red">unlimited spots open</span></div>
     </div>
     <div class="stage">
@@ -303,7 +320,11 @@
 
   <section class="final">
     <h2>Get one from the first batch.</h2>
-    <a href="#builder" class="cta" onclick="goBuild();return false;">Pick colors & reserve →</a>
+    <div class="buyrow" style="justify-content:center">
+      <a class="buy" href="https://www.foundersweekends.com/api/pay?venture=5ae437b9-f915-48ba-92e7-26029dacdac1&amp;amount=2000&amp;name=Rage+Dome" target="_blank" rel="noopener noreferrer">Buy now — $20</a>
+      <a href="#builder" class="cta" onclick="goBuild();return false;">Pick colors & reserve →</a>
+    </div>
+    <span class="buynote">Pre-order · secure checkout · ships with the first batch</span>
   </section>
 
 </div>

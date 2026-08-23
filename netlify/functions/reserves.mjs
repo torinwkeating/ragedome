@@ -24,6 +24,15 @@ export default async (req) => {
   const given = req.headers.get("x-admin-key") || url.searchParams.get("key") || "";
   if (given !== expected) return json({ error: "unauthorized" }, 401);
 
+  // delete a single reservation
+  if (req.method === "DELETE") {
+    const id = url.searchParams.get("id");
+    if (!id) return json({ error: "missing id" }, 400);
+    await store.delete(id);
+    const { blobs } = await store.list();
+    return json({ ok: true, count: blobs.length });
+  }
+
   const { blobs } = await store.list();
   const items = [];
   for (const b of blobs) {

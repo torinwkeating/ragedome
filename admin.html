@@ -27,6 +27,8 @@
   .dot{display:inline-block;width:14px;height:14px;border-radius:50%;border:1px solid var(--line);vertical-align:-2px;margin-right:6px}
   .err{color:#ff453a;font-size:14px;margin-top:10px}
   .muted{color:var(--muted)}
+  .del{background:transparent;border:1px solid var(--line);color:#ff453a;padding:6px 12px;font-size:13px;font-weight:600;border-radius:8px;cursor:pointer}
+  .del:hover{border-color:#ff453a;background:rgba(255,69,58,.1)}
   .hide{display:none}
 </style>
 </head>
@@ -56,7 +58,7 @@
 
     <div class="panel">
       <table>
-        <thead><tr><th>#</th><th>Email</th><th>When</th><th>Colors picked</th></tr></thead>
+        <thead><tr><th>#</th><th>Email</th><th>When</th><th>Colors picked</th><th></th></tr></thead>
         <tbody id="rows"></tbody>
       </table>
       <p class="muted hide" id="empty" style="padding:18px 0">No reservations yet.</p>
@@ -102,9 +104,25 @@ function render(){
     if(d.base) colors += '<span class="dot" style="background:'+d.base+'"></span>base';
     if(!colors) colors = '<span class="muted">—</span>';
     var tr = document.createElement('tr');
-    tr.innerHTML = '<td class="muted">'+(i+1)+'</td><td class="email">'+esc(d.email)+'</td><td class="muted">'+when+'</td><td>'+colors+'</td>';
+    tr.innerHTML = '<td class="muted">'+(i+1)+'</td><td class="email">'+esc(d.email)+'</td><td class="muted">'+when+'</td><td>'+colors+'</td>'+
+      '<td style="text-align:right"><button class="del" onclick="del(\''+d.id+'\',\''+esc(d.email)+'\')">Delete</button></td>';
     tb.appendChild(tr);
   });
+}
+
+async function del(id, email){
+  if(!confirm('Delete '+email+'? This cannot be undone.')) return;
+  try{
+    var r = await fetch('/.netlify/functions/reserves?id='+encodeURIComponent(id), {
+      method:'DELETE',
+      headers:{ 'x-admin-key': keyVal() }
+    });
+    var j = await r.json();
+    if(!r.ok){ alert(j.error || 'Could not delete.'); return; }
+    data = data.filter(function(d){ return d.id !== id; });
+    document.getElementById('count').textContent = j.count;
+    render();
+  }catch(e){ alert('Could not reach the server.'); }
 }
 
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }

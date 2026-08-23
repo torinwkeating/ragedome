@@ -177,7 +177,7 @@
 
   <section class="view3d">
     <h2>Spin it — see every angle</h2>
-    <p class="viewhint">Click and drag to spin it · shown on a real setup · pick your colors</p>
+    <p class="viewhint">Click and drag to rotate · pick a color</p>
     <div id="canvas3d"></div>
     <div class="swrow">
       <span class="swlabel">Dome</span>
@@ -311,137 +311,53 @@
     var el=document.getElementById('canvas3d');
     if(!window.THREE){el.innerHTML='<p style="color:#a3a7b8;padding:40px">3D preview needs an internet connection.</p>';return;}
     var w=el.clientWidth, h=el.clientHeight;
-
     scene=new THREE.Scene();
-    scene.fog=new THREE.Fog(0x08090d,6.5,17);
-
-    camera=new THREE.PerspectiveCamera(38,w/h,0.1,100);
-    camera.position.set(0,1.85,4.5);
-    camera.lookAt(0,0.25,-0.2);
-
+    camera=new THREE.PerspectiveCamera(40,w/h,0.1,100);
+    camera.position.set(0,1.4,4.2);
+    camera.lookAt(0,0.35,0);
     renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
-    renderer.setSize(w,h);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-    renderer.shadowMap.enabled=true;
-    renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-    if(THREE.sRGBEncoding) renderer.outputEncoding=THREE.sRGBEncoding;
+    renderer.setSize(w,h);renderer.setPixelRatio(window.devicePixelRatio);
     el.appendChild(renderer.domElement);
 
-    // ---- lighting: dim room + RGB setup glow ----
-    scene.add(new THREE.HemisphereLight(0xffffff,0x0a0b10,0.75));
-    var key=new THREE.DirectionalLight(0xffffff,1.25);
-    key.position.set(3.5,6,3.5);
-    key.castShadow=true;
-    key.shadow.mapSize.set(1024,1024);
-    key.shadow.camera.near=0.5; key.shadow.camera.far=22;
-    key.shadow.camera.left=-5; key.shadow.camera.right=5;
-    key.shadow.camera.top=5; key.shadow.camera.bottom=-5;
-    key.shadow.bias=-0.0005;
-    scene.add(key);
-    var rimA=new THREE.PointLight(0xff2d55,0.45,9); rimA.position.set(-4.2,1.5,-3.2); scene.add(rimA);
-    var rimB=new THREE.PointLight(0x00c7ff,0.4,9); rimB.position.set(4.3,1.3,-3.4); scene.add(rimB);
-    var fill=new THREE.PointLight(0xffffff,0.55,16); fill.position.set(-2,2.6,3.4); scene.add(fill);
+    scene.add(new THREE.AmbientLight(0xffffff,0.55));
+    var d=new THREE.DirectionalLight(0xffffff,0.9);d.position.set(3,5,4);scene.add(d);
+    var p=new THREE.PointLight(0xffffff,0.5);p.position.set(-3,2,3);scene.add(p);
 
-    // ---- the desk ----
-    var desk=new THREE.Mesh(
-      new THREE.BoxGeometry(18,0.35,10),
-      new THREE.MeshStandardMaterial({color:0x13151c,roughness:0.72,metalness:0.18})
-    );
-    desk.position.y=-0.175; desk.receiveShadow=true; scene.add(desk);
-
-    // ---- RGB mousepad the dome sits on ----
-    var padGlow=new THREE.Mesh(
-      new THREE.BoxGeometry(6.25,0.012,4.25),
-      new THREE.MeshBasicMaterial({color:0xff2d55})
-    );
-    padGlow.position.set(0,0.006,0.2); scene.add(padGlow);
-    var pad=new THREE.Mesh(
-      new THREE.BoxGeometry(6,0.022,4),
-      new THREE.MeshStandardMaterial({color:0x0d0f15,roughness:0.95})
-    );
-    pad.position.set(0,0.014,0.2); pad.receiveShadow=true; scene.add(pad);
-
-    // ---- keyboard ----
-    var kb=new THREE.Mesh(
-      new THREE.BoxGeometry(3.7,0.17,1.2),
-      new THREE.MeshStandardMaterial({color:0x191c25,roughness:0.55})
-    );
-    kb.position.set(-0.25,0.11,-1.85); kb.castShadow=true; kb.receiveShadow=true; scene.add(kb);
-    var keys=new THREE.Mesh(
-      new THREE.PlaneGeometry(3.45,1.0),
-      new THREE.MeshBasicMaterial({color:0x6a4bff})
-    );
-    keys.rotation.x=-Math.PI/2; keys.position.set(-0.25,0.197,-1.85); scene.add(keys);
-
-    // ---- mouse ----
-    var mouse=new THREE.Mesh(
-      new THREE.SphereGeometry(0.3,28,18),
-      new THREE.MeshStandardMaterial({color:0x1b1e27,roughness:0.35})
-    );
-    mouse.scale.set(0.72,0.48,1.15);
-    mouse.position.set(2.15,0.15,0.4);
-    mouse.castShadow=true; scene.add(mouse);
-
-    // ---- monitor in the background ----
-    var stand=new THREE.Mesh(
-      new THREE.CylinderGeometry(0.1,0.18,0.8,18),
-      new THREE.MeshStandardMaterial({color:0x232732,roughness:0.35,metalness:0.65})
-    );
-    stand.position.set(0,0.4,-3.5); stand.castShadow=true; scene.add(stand);
-    var bezel=new THREE.Mesh(
-      new THREE.BoxGeometry(5.4,3.0,0.14),
-      new THREE.MeshStandardMaterial({color:0x0a0c12,roughness:0.3,metalness:0.4})
-    );
-    bezel.position.set(0,2.25,-3.6); scene.add(bezel);
-    var screen=new THREE.Mesh(
-      new THREE.PlaneGeometry(5.1,2.72),
-      new THREE.MeshBasicMaterial({color:0x1d4278})
-    );
-    screen.position.set(0,2.25,-3.51); scene.add(screen);
-    var screenLight=new THREE.PointLight(0x4a86e8,0.35,8);
-    screenLight.position.set(0,2.0,-2.7); scene.add(screenLight);
-
-    // ---- THE PRODUCT ----
     group=new THREE.Group();
-
+    // smooth, low, wide lump
     var domeGeo=new THREE.SphereGeometry(1,96,72,0,Math.PI*2,0,Math.PI/2);
-    domeMat=new THREE.MeshStandardMaterial({color:0xe0263f,roughness:0.45,metalness:0.0});
+    domeMat=new THREE.MeshStandardMaterial({color:0xe0263f,roughness:0.4,metalness:0.03});
     var dome=new THREE.Mesh(domeGeo,domeMat);
-    dome.scale.set(1.3,0.55,1.3);
-    dome.castShadow=true; dome.receiveShadow=true;
+    dome.scale.set(1.3,0.55,1.3); // low, wide, spread-out
     group.add(dome);
-
+    // thin square grip pad with rounded corners (dome sits in the center)
     var baseGeo=new THREE.ExtrudeGeometry(roundedRectShape(2.7,2.7,0.5),
       {depth:0.07,bevelEnabled:true,bevelThickness:0.02,bevelSize:0.02,bevelSegments:3});
     baseGeo.rotateX(-Math.PI/2);
     baseGeo.center();
-    baseMat=new THREE.MeshStandardMaterial({color:0x1a1d29,roughness:0.88,metalness:0.05});
+    baseMat=new THREE.MeshStandardMaterial({color:0x1a1d29,roughness:0.85});
     var base=new THREE.Mesh(baseGeo,baseMat);
     base.position.y=-0.055;
-    base.castShadow=true; base.receiveShadow=true;
     group.add(base);
-
-    group.position.set(0,0.09,0.2);
+    group.position.y=0.0;
     scene.add(group);
 
-    // drag to rotate the product
+    // drag to rotate
     el.addEventListener('pointerdown',function(e){dragging=true;autoRot=false;px=e.clientX;py=e.clientY;});
     window.addEventListener('pointerup',function(){dragging=false;});
     window.addEventListener('pointermove',function(e){
       if(!dragging)return;
       group.rotation.y+=(e.clientX-px)*0.01;
       group.rotation.x+=(e.clientY-py)*0.01;
-      group.rotation.x=Math.max(-0.5,Math.min(0.8,group.rotation.x));
+      group.rotation.x=Math.max(-0.6,Math.min(0.9,group.rotation.x));
       px=e.clientX;py=e.clientY;
     });
     window.addEventListener('resize',function(){
       var nw=el.clientWidth,nh=el.clientHeight;
-      if(!nw||!nh)return;
       camera.aspect=nw/nh;camera.updateProjectionMatrix();renderer.setSize(nw,nh);
     });
     animate();
   }
-
   function animate(){
     requestAnimationFrame(animate);
     if(autoRot&&group)group.rotation.y+=0.006;

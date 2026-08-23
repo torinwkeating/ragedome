@@ -482,7 +482,8 @@
       clearcoat:0.22,          // faint soft-touch sheen
       clearcoatRoughness:0.75,
       bumpMap:rubberBump,
-      bumpScale:0.006          // micro texture only
+      bumpScale:0.006,         // micro texture only
+      side:THREE.DoubleSide    // no see-through from low angles
     });
     var dome=new THREE.Mesh(domeGeo,domeMat);
     dome.castShadow=true;
@@ -491,14 +492,13 @@
     group.add(dome);
     domeMesh=dome;
 
-    // contact shadow under the dome
-    var cShadow=new THREE.Mesh(
-      new THREE.PlaneGeometry(3.6,3.6),
-      new THREE.MeshBasicMaterial({map:makeContactShadow(),transparent:true,depthWrite:false})
-    );
-    cShadow.rotation.x=-Math.PI/2;
-    cShadow.position.y=0.004;
-    group.add(cShadow);
+    // seal the underside so there is no hole
+    var capGeo=new THREE.CircleGeometry(1.40,128);
+    capGeo.rotateX(Math.PI/2);
+    var cap=new THREE.Mesh(capGeo,domeMat);
+    cap.position.y=0.001;
+    dome.add(cap);
+
 
     var baseGeo=new THREE.ExtrudeGeometry(roundedRectShape(2.7,2.7,0.5),
       {depth:0.07,bevelEnabled:true,bevelThickness:0.02,bevelSize:0.02,bevelSegments:3});

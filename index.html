@@ -75,6 +75,7 @@
     background:radial-gradient(circle at 50% 35%,#1b1e2b,#0c0d12);
     border:1px solid var(--line);border-radius:18px;cursor:grab;touch-action:none}
   #canvas3d:active{cursor:grabbing}
+  .slammsg{height:22px;margin-top:10px;font-weight:700;color:var(--accent);opacity:0;transition:opacity .25s}
   .swrow{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px;flex-wrap:wrap}
   .swlabel{font-size:13px;color:var(--muted);width:44px;text-align:right;font-weight:600}
   .swatches{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
@@ -177,8 +178,9 @@
 
   <section class="view3d">
     <h2>Spin it — see every angle</h2>
-    <p class="viewhint">Click and drag to rotate · pick a color</p>
+    <p class="viewhint">Click it to slam 💥 · drag to rotate · pick a color</p>
     <div id="canvas3d"></div>
+    <div id="slamMsg" class="slammsg"></div>
     <div class="swrow">
       <span class="swlabel">Dome</span>
       <div class="swatches">
@@ -306,6 +308,7 @@
     return s;
   }
   var selDome='#e0263f', selBase='#1a1d29';
+  var domeMesh=null, squashing=false, squashT=0, downX=0, downY=0;
   var domeMat, baseMat, group, renderer, scene, camera, dragging=false, px=0, py=0, autoRot=true;
   function init3d(){
     var el=document.getElementById('canvas3d');
@@ -329,6 +332,7 @@
     domeMat=new THREE.MeshStandardMaterial({color:0xe0263f,roughness:0.4,metalness:0.03});
     var dome=new THREE.Mesh(domeGeo,domeMat);
     dome.scale.set(1.3,0.55,1.3); // low, wide, spread-out
+    domeMesh=dome;
     group.add(dome);
     // thin square grip pad with rounded corners (dome sits in the center)
     var baseGeo=new THREE.ExtrudeGeometry(roundedRectShape(2.7,2.7,0.5),
@@ -343,7 +347,11 @@
     scene.add(group);
 
     // drag to rotate
-    el.addEventListener('pointerdown',function(e){dragging=true;autoRot=false;px=e.clientX;py=e.clientY;});
+    el.addEventListener('pointerdown',function(e){dragging=true;autoRot=false;px=e.clientX;py=e.clientY;downX=e.clientX;downY=e.clientY;});
+    el.addEventListener('pointerup',function(e){
+      var moved=Math.abs(e.clientX-downX)+Math.abs(e.clientY-downY);
+      if(moved<6){slam();}
+    });
     window.addEventListener('pointerup',function(){dragging=false;});
     window.addEventListener('pointermove',function(e){
       if(!dragging)return;
@@ -358,9 +366,27 @@
     });
     animate();
   }
+  function slam(){
+    squashing=true; squashT=0;
+    var b=document.getElementById('slamMsg');
+    if(b){b.textContent='SLAM! 💥 squished 55% — springs right back';b.style.opacity='1';
+      clearTimeout(window._slamTO);
+      window._slamTO=setTimeout(function(){b.style.opacity='0';},1600);}
+  }
+
   function animate(){
     requestAnimationFrame(animate);
     if(autoRot&&group)group.rotation.y+=0.006;
+
+    if(squashing&&domeMesh){
+      squashT+=0.016;
+      var A=0.55, decay=6.5, omega=17.0;   // impact, then spring back with a wobble
+      var sq=1-A*Math.exp(-decay*squashT)*Math.cos(omega*squashT);
+      if(squashT>1.4){squashing=false;sq=1;}
+      var spread=1+(1-sq)*0.4;             // squishes down, bulges out
+      domeMesh.scale.set(1.3*spread,0.55*sq,1.3*spread);
+    }
+
     if(renderer)renderer.render(scene,camera);
   }
   function setColor(hex,btn){

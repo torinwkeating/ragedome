@@ -280,13 +280,13 @@
 <!-- reservation modal -->
 <div class="modal" id="modal">
   <div class="card">
-    <form name="reservations" method="POST" data-netlify="true" netlify-honeypot="bot-field" onsubmit="return submitRes(event)">
-      <input type="hidden" name="form-name" value="reservations">
-      <p class="hidden"><label>Leave blank: <input name="bot-field"></label></p>
+    <form id="resForm" onsubmit="return submitRes(event)">
       <h3>Reserve your Rage Dome 🔥</h3>
       <p>Drop your email and we'll hold one from the first batch for you.</p>
       <input type="email" name="email" id="email" placeholder="you@email.com" required>
-      <button type="submit" class="cta">Hold my spot</button>
+      <input type="text" name="hp" id="hp" class="hidden" tabindex="-1" autocomplete="off">
+      <button type="submit" class="cta" id="resBtn">Hold my spot</button>
+      <div id="resErr" class="hidden" style="color:#ff453a;font-size:14px;margin-top:10px"></div>
     </form>
     <button class="close" onclick="closeModal()">Maybe later</button>
   </div>
@@ -305,6 +305,7 @@
     s.lineTo(x,y+r); s.quadraticCurveTo(x,y,x+r,y);
     return s;
   }
+  var selDome='#e0263f', selBase='#1a1d29';
   var domeMat, baseMat, group, renderer, scene, camera, dragging=false, px=0, py=0, autoRot=true;
   function init3d(){
     var el=document.getElementById('canvas3d');
@@ -363,12 +364,14 @@
     if(renderer)renderer.render(scene,camera);
   }
   function setColor(hex,btn){
+    selDome=hex;
     if(domeMat)domeMat.color.set(hex);
     var row=btn.closest('.swrow');
     row.querySelectorAll('.sw').forEach(function(s){s.classList.remove('active')});
     if(btn)btn.classList.add('active');
   }
   function setBaseColor(hex,btn){
+    selBase=hex;
     if(baseMat)baseMat.color.set(hex);
     var row=btn.closest('.swrow');
     row.querySelectorAll('.sw').forEach(function(s){s.classList.remove('active')});
@@ -378,20 +381,44 @@
 
   function openModal(){document.getElementById('modal').classList.add('on')}
   function closeModal(){document.getElementById('modal').classList.remove('on')}
-  var reserved=0;
+  // ---- reservations (saved server-side) ----
   function submitRes(e){
     e.preventDefault();
-    var form=e.target;
-    var data=new URLSearchParams(new FormData(form)).toString();
-    fetch("/",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:data})
-      .then(showHeld).catch(showHeld); // show success even offline (local preview)
+    var btn=document.getElementById('resBtn');
+    var err=document.getElementById('resErr');
+    err.classList.add('hidden');
+    btn.textContent='Saving...';
+    fetch('/.netlify/functions/reserve',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        email:document.getElementById('email').value,
+        hp:document.getElementById('hp').value,
+        dome:selDome,
+        base:selBase
+      })
+    })
+    .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
+    .then(function(res){
+      if(!res.ok){throw new Error(res.j.error||'error');}
+      if(typeof res.j.count==='number'){document.getElementById('count').textContent=res.j.count;}
+      document.querySelector('.card').innerHTML='<h3>Spot held \u2705</h3><p>Thanks! We\'ll email you the second the first batch is ready.</p><button class="close" onclick="closeModal()">Close</button>';
+    })
+    .catch(function(){
+      btn.textContent='Hold my spot';
+      err.textContent='Could not save that \u2014 check the email and try again.';
+      err.classList.remove('hidden');
+    });
     return false;
   }
-  function showHeld(){
-    reserved++;
-    document.getElementById('count').textContent=reserved;
-    document.querySelector('.card').innerHTML='<h3>Spot held ✅</h3><p>Thanks! We\'ll email you the second the first batch is ready.</p><button class="close" onclick="closeModal()">Close</button>';
+
+  function loadCount(){
+    fetch('/.netlify/functions/reserves?count=1')
+      .then(function(r){return r.json();})
+      .then(function(j){if(typeof j.count==='number'){document.getElementById('count').textContent=j.count;}})
+      .catch(function(){});
   }
+  window.addEventListener('load',loadCount);
 </script>
 </body>
 </html>

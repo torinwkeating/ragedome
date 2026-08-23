@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Rage Dome — Admin</title>
+<style>
+  :root{--bg:#0c0d12;--panel:#14161f;--ink:#f4f5fa;--muted:#a3a7b8;--accent:#ff2d55;--line:#242736}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--ink);padding:28px}
+  .wrap{max-width:1000px;margin:0 auto}
+  h1{font-size:26px;margin-bottom:4px}
+  .logo span{color:var(--accent)}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:24px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px;margin-bottom:20px}
+  input{padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:15px;width:260px}
+  button{background:var(--accent);color:#fff;font-weight:700;border:none;padding:12px 22px;border-radius:10px;cursor:pointer;font-size:15px}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .stat{font-size:42px;font-weight:800}
+  .statlabel{color:var(--muted);font-size:14px}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+  th,td{padding:11px 8px;border-bottom:1px solid var(--line);text-align:left}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  td.email{font-weight:600}
+  .dot{display:inline-block;width:14px;height:14px;border-radius:50%;border:1px solid var(--line);vertical-align:-2px;margin-right:6px}
+  .err{color:#ff453a;font-size:14px;margin-top:10px}
+  .muted{color:var(--muted)}
+  .hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="logo"><span>RAGE</span> DOME — Admin</h1>
+  <p class="sub">Everyone who reserved a Rage Dome.</p>
+
+  <div class="panel" id="login">
+    <div class="row">
+      <input type="password" id="key" placeholder="Admin password" autocomplete="current-password">
+      <button onclick="load()">Sign in</button>
+    </div>
+    <div class="err hide" id="err"></div>
+  </div>
+
+  <div id="dash" class="hide">
+    <div class="panel">
+      <div class="stat" id="count">0</div>
+      <div class="statlabel">total reservations</div>
+      <div class="row" style="margin-top:18px">
+        <button onclick="load()">Refresh</button>
+        <button class="ghost" onclick="exportCsv()">Download CSV</button>
+        <button class="ghost" onclick="copyEmails()">Copy all emails</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <table>
+        <thead><tr><th>#</th><th>Email</th><th>When</th><th>Colors picked</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <p class="muted hide" id="empty" style="padding:18px 0">No reservations yet.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+var data = [];
+
+function keyVal(){ return document.getElementById('key').value.trim(); }
+
+async function load(){
+  var err = document.getElementById('err');
+  err.classList.add('hide');
+  try{
+    var r = await fetch('/.netlify/functions/reserves', { headers: { 'x-admin-key': keyVal() } });
+    var j = await r.json();
+    if(!r.ok){
+      err.textContent = j.error === 'unauthorized' ? 'Wrong password.' : (j.error || 'Something went wrong.');
+      err.classList.remove('hide');
+      return;
+    }
+    data = j.reservations || [];
+    document.getElementById('login').classList.add('hide');
+    document.getElementById('dash').classList.remove('hide');
+    document.getElementById('count').textContent = j.count;
+    render();
+  }catch(e){
+    err.textContent = 'Could not reach the server.';
+    err.classList.remove('hide');
+  }
+}
+
+function render(){
+  var tb = document.getElementById('rows');
+  tb.innerHTML = '';
+  document.getElementById('empty').classList.toggle('hide', data.length > 0);
+  data.forEach(function(d, i){
+    var when = new Date(d.ts).toLocaleString();
+    var colors = '';
+    if(d.dome) colors += '<span class="dot" style="background:'+d.dome+'"></span>dome ';
+    if(d.base) colors += '<span class="dot" style="background:'+d.base+'"></span>base';
+    if(!colors) colors = '<span class="muted">—</span>';
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td class="muted">'+(i+1)+'</td><td class="email">'+esc(d.email)+'</td><td class="muted">'+when+'</td><td>'+colors+'</td>';
+    tb.appendChild(tr);
+  });
+}
+
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+function exportCsv(){
+  var rows = [['email','reserved_at','dome_color','base_color']];
+  data.forEach(function(d){ rows.push([d.email, d.ts, d.dome||'', d.base||'']); });
+  var csv = rows.map(function(r){ return r.map(function(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }).join(','); }).join('\n');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+  a.download = 'rage-dome-reservations.csv';
+  a.click();
+}
+
+function copyEmails(){
+  navigator.clipboard.writeText(data.map(function(d){ return d.email; }).join(', '));
+}
+
+document.getElementById('key').addEventListener('keydown', function(e){ if(e.key==='Enter') load(); });
+</script>
+</body>
+</html>

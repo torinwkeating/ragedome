@@ -540,7 +540,7 @@
   function slam(){
     squashing=true; squashT=0;
     var b=document.getElementById('slamMsg');
-    if(b){b.textContent='SLAM! 💥 squished 75% — springs right back';b.style.opacity='1';
+    if(b){b.textContent='SLAM! 💥 absorbs the hit — squashed 75%';b.style.opacity='1';
       clearTimeout(window._slamTO);
       window._slamTO=setTimeout(function(){b.style.opacity='0';},1600);}
   }
@@ -551,10 +551,16 @@
 
     if(squashing&&domeMesh){
       squashT+=0.016;
-      var A=0.75, decay=6.0, omega=16.0;   // deeper squish, then spring back with a wobble
-      var sq=1-A*Math.exp(-decay*squashT)*Math.cos(omega*squashT);
-      if(squashT>1.4){squashing=false;sq=1;}
-      var spread=1+(1-sq)*0.5;             // squishes down, bulges out
+      var t=squashT, A=0.75, comp;
+      if(t<0.05){
+        comp=A*(t/0.05);                   // impact: crushes almost instantly
+      }else{
+        var u=t-0.05, k=11;                // critically damped -> absorbs it, no bounce
+        comp=A*Math.exp(-k*u)*(1+k*u);
+      }
+      if(t>1.0){squashing=false;comp=0;}
+      var sq=1-comp;
+      var spread=1+comp*0.5;               // squashes down, bulges out under the load
       var bx=(domeMesh.userData&&domeMesh.userData.bx)||1;
       var by=(domeMesh.userData&&domeMesh.userData.by)||1;
       domeMesh.scale.set(bx*spread,by*sq,bx*spread);

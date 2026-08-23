@@ -71,14 +71,25 @@
   .view3d{text-align:center;margin-bottom:60px}
   .view3d h2{font-size:28px;margin-bottom:6px}
   .viewhint{color:var(--muted);font-size:14px;margin-bottom:18px}
-  #canvas3d{width:100%;max-width:560px;height:380px;margin:0 auto;
+  #canvas3d{width:100%;max-width:100%;height:380px;margin:0 auto;
     background:radial-gradient(circle at 50% 35%,#1b1e2b,#0c0d12);
     border:1px solid var(--line);border-radius:18px;cursor:grab;touch-action:none}
   #canvas3d:active{cursor:grabbing}
   .slammsg{height:22px;margin-top:10px;font-weight:700;color:var(--accent);opacity:0;transition:opacity .25s}
-  .swrow{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+  .buildgrid{display:grid;grid-template-columns:1.15fr .85fr;gap:26px;align-items:start;text-align:left}
+  @media(max-width:860px){.buildgrid{grid-template-columns:1fr}}
+  .respanel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px}
+  .respanel h3{font-size:16px;margin-bottom:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .picked{margin-top:16px;font-size:14px;color:var(--muted)}
+  .pdot{display:inline-block;width:13px;height:13px;border-radius:50%;border:1px solid var(--line);vertical-align:-2px;margin-right:5px}
+  .ppanel{font-size:16px;margin-bottom:14px}
+  .ppanel b{font-size:30px}
+  .respanel input[type=email]{width:100%;padding:13px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:16px;margin-bottom:12px}
+  .respanel .cta{width:100%;text-align:center;padding:15px}
+  .respanel .guarantee{text-align:center}
+  .swrow{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
   .swlabel{font-size:13px;color:var(--muted);width:44px;text-align:right;font-weight:600}
-  .swatches{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .swatches{display:flex;gap:9px;flex-wrap:wrap}
   .sw{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);cursor:pointer;transition:transform .1s}
   .sw:hover{transform:scale(1.15)}
   .sw.active{border-color:#fff;transform:scale(1.15)}
@@ -143,7 +154,7 @@
       <h1>Slam the dome.<br>Not your <span class="white">controller.</span></h1>
       <p class="sub">One bad game and there goes a $70 controller. Rage Dome is a squishy half-dome that grips your desk so you can slam it as hard as you want — and it never pops off.</p>
       <div class="price"><b>$20</b><span class="strike">$34.99</span></div>
-      <a href="#" class="cta" onclick="openModal();return false;">Reserve mine →</a>
+      <a href="#builder" class="cta" onclick="goBuild();return false;">Pick colors & reserve →</a>
       <span class="guarantee">No payment now · Just claiming your spot in the first batch</span>
       <div class="counter"><b id="count">0</b> gamers reserved · <span class="red">unlimited spots open</span></div>
     </div>
@@ -176,35 +187,64 @@
     <div class="chip"><span>🌈</span>Every color coming</div>
   </section>
 
-  <section class="view3d">
-    <h2>Spin it — see every angle</h2>
-    <p class="viewhint">Click it to slam 💥 · drag to rotate · pick a color</p>
-    <div id="canvas3d"></div>
-    <div id="slamMsg" class="slammsg"></div>
-    <div class="swrow">
-      <span class="swlabel">Dome</span>
-      <div class="swatches">
-        <button class="sw" style="background:#e0263f" onclick="setColor('#e0263f',this)"></button>
-        <button class="sw" style="background:#ff9500" onclick="setColor('#ff9500',this)"></button>
-        <button class="sw" style="background:#ffd60a" onclick="setColor('#ffd60a',this)"></button>
-        <button class="sw" style="background:#34c759" onclick="setColor('#34c759',this)"></button>
-        <button class="sw" style="background:#00c7ff" onclick="setColor('#00c7ff',this)"></button>
-        <button class="sw" style="background:#5e5ce6" onclick="setColor('#5e5ce6',this)"></button>
-        <button class="sw" style="background:#af52de" onclick="setColor('#af52de',this)"></button>
-        <button class="sw" style="background:#1a1d29" onclick="setColor('#1a1d29',this)"></button>
+  <section class="view3d" id="builder">
+    <h2>Build yours, then grab your spot</h2>
+    <p class="viewhint">Click it to slam 💥 · drag to rotate</p>
+
+    <div class="buildgrid">
+      <div>
+        <div id="canvas3d"></div>
+        <div id="slamMsg" class="slammsg"></div>
       </div>
-    </div>
-    <div class="swrow">
-      <span class="swlabel">Base</span>
-      <div class="swatches">
-        <button class="sw" style="background:#1a1d29" onclick="setBaseColor('#1a1d29',this)"></button>
-        <button class="sw" style="background:#e0263f" onclick="setBaseColor('#e0263f',this)"></button>
-        <button class="sw" style="background:#ff9500" onclick="setBaseColor('#ff9500',this)"></button>
-        <button class="sw" style="background:#ffd60a" onclick="setBaseColor('#ffd60a',this)"></button>
-        <button class="sw" style="background:#34c759" onclick="setBaseColor('#34c759',this)"></button>
-        <button class="sw" style="background:#00c7ff" onclick="setBaseColor('#00c7ff',this)"></button>
-        <button class="sw" style="background:#5e5ce6" onclick="setBaseColor('#5e5ce6',this)"></button>
-        <button class="sw" style="background:#f4f5fa" onclick="setBaseColor('#f4f5fa',this)"></button>
+
+      <div class="respanel">
+        <h3>1. Pick your colors</h3>
+        <div class="swrow"><span class="swlabel">Dome</span>
+          <div class="swatches">
+          <button class="sw" style="background:#e0263f" onclick="setColor('#e0263f',this)" title="Red"></button>
+          <button class="sw" style="background:#ff9500" onclick="setColor('#ff9500',this)" title="Orange"></button>
+          <button class="sw" style="background:#ffd60a" onclick="setColor('#ffd60a',this)" title="Yellow"></button>
+          <button class="sw" style="background:#34c759" onclick="setColor('#34c759',this)" title="Green"></button>
+          <button class="sw" style="background:#00c7ff" onclick="setColor('#00c7ff',this)" title="Cyan"></button>
+          <button class="sw" style="background:#5e5ce6" onclick="setColor('#5e5ce6',this)" title="Blue"></button>
+          <button class="sw" style="background:#af52de" onclick="setColor('#af52de',this)" title="Purple"></button>
+          <button class="sw" style="background:#1a1d29" onclick="setColor('#1a1d29',this)" title="Black"></button>
+          </div>
+        </div>
+        <div class="swrow"><span class="swlabel">Base</span>
+          <div class="swatches">
+          <button class="sw" style="background:#1a1d29" onclick="setBaseColor('#1a1d29',this)" title="Black"></button>
+          <button class="sw" style="background:#e0263f" onclick="setBaseColor('#e0263f',this)" title="Red"></button>
+          <button class="sw" style="background:#ff9500" onclick="setBaseColor('#ff9500',this)" title="Orange"></button>
+          <button class="sw" style="background:#ffd60a" onclick="setBaseColor('#ffd60a',this)" title="Yellow"></button>
+          <button class="sw" style="background:#34c759" onclick="setBaseColor('#34c759',this)" title="Green"></button>
+          <button class="sw" style="background:#00c7ff" onclick="setBaseColor('#00c7ff',this)" title="Cyan"></button>
+          <button class="sw" style="background:#5e5ce6" onclick="setBaseColor('#5e5ce6',this)" title="Blue"></button>
+          <button class="sw" style="background:#f4f5fa" onclick="setBaseColor('#f4f5fa',this)" title="White"></button>
+          </div>
+        </div>
+
+        <div class="picked">
+          Your build:
+          <span class="pdot" id="pickDome"></span><span id="pickDomeName">Red</span> dome
+          ·
+          <span class="pdot" id="pickBase"></span><span id="pickBaseName">Black</span> base
+        </div>
+
+        <h3 style="margin-top:22px">2. Reserve it</h3>
+        <div class="ppanel"><b>$20</b><span class="strike">$34.99</span></div>
+
+        <div id="resWrap">
+          <form id="resForm" onsubmit="return submitRes(event)">
+            <input type="email" name="email" id="email" placeholder="you@email.com" required>
+            <input type="text" name="hp" id="hp" class="hidden" tabindex="-1" autocomplete="off">
+            <button type="submit" class="cta" id="resBtn">Hold my spot →</button>
+            <div id="resErr" class="hidden" style="color:#ff453a;font-size:14px;margin-top:10px"></div>
+          </form>
+          <span class="guarantee">No payment now · we email you when the first batch is ready</span>
+        </div>
+
+        <div class="counter"><b id="count2">0</b> gamers reserved · <span class="red">unlimited spots</span></div>
       </div>
     </div>
   </section>
@@ -272,27 +312,12 @@
 
   <section class="final">
     <h2>Get one from the first batch.</h2>
-    <a href="#" class="cta" onclick="openModal();return false;">Reserve mine →</a>
+    <a href="#builder" class="cta" onclick="goBuild();return false;">Pick colors & reserve →</a>
   </section>
 
 </div>
 
 <footer>Rage Dome · A first-batch reservation, not a charge · © 2026 · ragedome.com</footer>
-
-<!-- reservation modal -->
-<div class="modal" id="modal">
-  <div class="card">
-    <form id="resForm" onsubmit="return submitRes(event)">
-      <h3>Reserve your Rage Dome 🔥</h3>
-      <p>Drop your email and we'll hold one from the first batch for you.</p>
-      <input type="email" name="email" id="email" placeholder="you@email.com" required>
-      <input type="text" name="hp" id="hp" class="hidden" tabindex="-1" autocomplete="off">
-      <button type="submit" class="cta" id="resBtn">Hold my spot</button>
-      <div id="resErr" class="hidden" style="color:#ff453a;font-size:14px;margin-top:10px"></div>
-    </form>
-    <button class="close" onclick="closeModal()">Maybe later</button>
-  </div>
-</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -487,6 +512,8 @@
   }
   function setColor(hex,btn){
     selDome=hex;
+    var d=document.getElementById('pickDome'); if(d) d.style.background=hex;
+    var dn=document.getElementById('pickDomeName'); if(dn&&btn) dn.textContent=btn.title||'';
     if(domeMat)domeMat.color.set(hex);
     var row=btn.closest('.swrow');
     row.querySelectorAll('.sw').forEach(function(s){s.classList.remove('active')});
@@ -494,6 +521,8 @@
   }
   function setBaseColor(hex,btn){
     selBase=hex;
+    var b=document.getElementById('pickBase'); if(b) b.style.background=hex;
+    var bn=document.getElementById('pickBaseName'); if(bn&&btn) bn.textContent=btn.title||'';
     if(baseMat)baseMat.color.set(hex);
     var row=btn.closest('.swrow');
     row.querySelectorAll('.sw').forEach(function(s){s.classList.remove('active')});
@@ -501,8 +530,11 @@
   }
   window.addEventListener('load',init3d);
 
-  function openModal(){document.getElementById('modal').classList.add('on')}
-  function closeModal(){document.getElementById('modal').classList.remove('on')}
+  function goBuild(){
+    var el=document.getElementById('builder');
+    if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
   // ---- reservations (saved server-side) ----
   function submitRes(e){
     e.preventDefault();
@@ -523,8 +555,8 @@
     .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
     .then(function(res){
       if(!res.ok){throw new Error(res.j.error||'error');}
-      if(typeof res.j.count==='number'){document.getElementById('count').textContent=res.j.count;}
-      document.querySelector('.card').innerHTML='<h3>Spot held \u2705</h3><p>Thanks! We\'ll email you the second the first batch is ready.</p><button class="close" onclick="closeModal()">Close</button>';
+      if(typeof res.j.count==='number'){setCount(res.j.count);}
+      document.getElementById('resWrap').innerHTML='<div style="text-align:center;padding:8px 0"><div style="font-size:34px">\u2705</div><b>Spot held!</b><p style="color:#a3a7b8;font-size:14px;margin-top:6px">We\'ll email you the moment the first batch is ready.</p></div>';
     })
     .catch(function(){
       btn.textContent='Hold my spot';
@@ -534,13 +566,24 @@
     return false;
   }
 
+  function setCount(n){
+    ['count','count2'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.textContent=n;
+    });
+  }
+
   function loadCount(){
     fetch('/.netlify/functions/reserves?count=1')
       .then(function(r){return r.json();})
-      .then(function(j){if(typeof j.count==='number'){document.getElementById('count').textContent=j.count;}})
+      .then(function(j){if(typeof j.count==='number'){setCount(j.count);}})
       .catch(function(){});
   }
-  window.addEventListener('load',loadCount);
+  window.addEventListener('load',function(){
+    loadCount();
+    var d=document.getElementById('pickDome'); if(d) d.style.background=selDome;
+    var b=document.getElementById('pickBase'); if(b) b.style.background=selBase;
+  });
 </script>
 </body>
 </html>

@@ -1,8 +1,18 @@
 // Rage Dome — API + static assets
+const CORS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
+  "access-control-allow-headers": "content-type,x-admin-key",
+  "access-control-max-age": "86400"
+};
+
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), {
     status,
-    headers: { "content-type": "application/json", "cache-control": "no-store" }
+    headers: Object.assign(
+      { "content-type": "application/json", "cache-control": "no-store" },
+      CORS
+    )
   });
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;
@@ -84,6 +94,12 @@ async function handleReserves(request, env) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    // browser preflight for cross-origin API calls
+    if (request.method === "OPTIONS" && url.pathname.startsWith("/api/")) {
+      return new Response(null, { status: 204, headers: CORS });
+    }
+
     if (url.pathname === "/api/reserve")  return handleReserve(request, env);
     if (url.pathname === "/api/reserves") return handleReserves(request, env);
     if (url.pathname === "/admin" || url.pathname === "/admin/") {

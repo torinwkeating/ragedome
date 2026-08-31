@@ -417,11 +417,18 @@
     group=new THREE.Group();
     // smooth, low, wide lump
     var domeGeo=new THREE.SphereGeometry(1,96,72,0,Math.PI*2,0,Math.PI/2);
-    domeMat=new THREE.MeshStandardMaterial({color:0xe0263f,roughness:0.4,metalness:0.03});
+    domeMat=new THREE.MeshStandardMaterial({color:0xe0263f,roughness:0.4,metalness:0.03,side:THREE.DoubleSide});
     var dome=new THREE.Mesh(domeGeo,domeMat);
     dome.scale.set(1.3,0.55,1.3); // low, wide, spread-out
     dome.userData={bx:1.3,by:0.55};
     domeMesh=dome;
+
+    // seal the underside so there's no see-through hole from low angles
+    var capGeo=new THREE.CircleGeometry(1,96);
+    capGeo.rotateX(Math.PI/2);
+    var cap=new THREE.Mesh(capGeo,domeMat);
+    cap.position.y=0.002;
+    dome.add(cap);
 
     origPos=domeGeo.attributes.position.array.slice();
     hitLocal=new THREE.Vector3(0,1,0);

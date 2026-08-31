@@ -549,7 +549,7 @@
     var err=document.getElementById('resErr');
     err.classList.add('hidden');
     btn.textContent='Saving...';
-    fetch('/.netlify/functions/reserve',{
+    fetch('/api/reserve',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -581,7 +581,7 @@
   }
 
   function loadCount(){
-    fetch('/.netlify/functions/reserves?count=1')
+    fetch('/api/reserves?count=1')
       .then(function(r){return r.json();})
       .then(function(j){if(typeof j.count==='number'){setCount(j.count);}})
       .catch(function(){});

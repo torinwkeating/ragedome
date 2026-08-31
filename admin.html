@@ -75,7 +75,7 @@ async function load(){
   var err = document.getElementById('err');
   err.classList.add('hide');
   try{
-    var r = await fetch('/.netlify/functions/reserves', { headers: { 'x-admin-key': keyVal() } });
+    var r = await fetch('/api/reserves', { headers: { 'x-admin-key': keyVal() } });
     var j = await r.json();
     if(!r.ok){
       err.textContent = j.error === 'unauthorized' ? 'Wrong password.' : (j.error || 'Something went wrong.');
@@ -113,7 +113,7 @@ function render(){
 async function del(id, email){
   if(!confirm('Delete '+email+'? This cannot be undone.')) return;
   try{
-    var r = await fetch('/.netlify/functions/reserves?id='+encodeURIComponent(id), {
+    var r = await fetch('/api/reserves?id='+encodeURIComponent(id), {
       method:'DELETE',
       headers:{ 'x-admin-key': keyVal() }
     });
